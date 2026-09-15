@@ -1,6 +1,6 @@
 import flet as ft
 from flet_color_pickers import BlockPicker
-
+import  guardado_logica
 def main(page: ft.Page):
 
     page.title = "Configuración de Usuario"
@@ -120,6 +120,23 @@ def main(page: ft.Page):
             print(tema.value)
             print(idioma.value)
             print(fuente.value)
+
+            datos = {
+                "nombre_usuario": usuario.value,
+                "tema_interfaz": tema.value,
+                "idioma": idioma.value,
+                "tamaño_fuente": int(fuente.value) if fuente.value else 13,
+                "color_barra": color_menu_valor,
+                "color_letra": color_letra_valor,
+                "foto_perfil": foto_valor,
+            }
+            guardado_logica.guardar_configuracion(datos)
+
+            if tema.value == "Oscuro":
+                page.theme_mode = ft.ThemeMode.DARK
+            else:
+                page.theme_mode = ft.ThemeMode.LIGHT
+
             if tema.value == "Oscuro":
                 page.theme_mode = ft.ThemeMode.DARK
             else:
