@@ -9,87 +9,88 @@ def main(page: ft.Page):
 
     color_menu_valor = "#1a1d28"
     color_letra_valor = "#000000"
+    foto_valor = ""
 
-    txt_archivo = ft.Text("Archivo")
-    txt_nuevo = ft.Text("Nuevo")
-    txt_salir = ft.Text("Salir")
-    txt_edicion = ft.Text("Edición")
-    txt_copiar = ft.Text("Copiar")
-    txt_pegar = ft.Text("Pegar")
-    txt_ver = ft.Text("Ver")
-    txt_vista = ft.Text("Vista")
-    txt_settings = ft.Text("Settings")
-    txt_configuracion = ft.Text("Configuración")
+    file_picker = ft.FilePicker()
+    page.services.append(file_picker)
+
+    avatar = ft.CircleAvatar(foreground_image_src=foto_valor, radius=35)
+
+    archivo = ft.Text("Archivo")
+    nuevo = ft.Text("Nuevo")
+    salir = ft.Text("Salir")
+    edicion = ft.Text("Edición")
+    copiar = ft.Text("Copiar")
+    pegar = ft.Text("Pegar")
+    ver = ft.Text("Ver")
+    vista = ft.Text("Vista")
+    settings = ft.Text("Settings")
+    configuracion = ft.Text("Configuración")
 
     def aplicar_idioma(codigo):
         if codigo == "es":
-            txt_archivo.value = "Archivo"
-            txt_nuevo.value = "Nuevo"
-            txt_salir.value = "Salir"
-            txt_edicion.value = "Edición"
-            txt_copiar.value = "Copiar"
-            txt_pegar.value = "Pegar"
-            txt_ver.value = "Ver"
-            txt_vista.value = "Vista"
-            txt_settings.value = "Settings"
-            txt_configuracion.value = "Configuración"
+            archivo.value = "Archivo"
+            nuevo.value = "Nuevo"
+            salir.value = "Salir"
+            edicion.value = "Edición"
+            copiar.value = "Copiar"
+            pegar.value = "Pegar"
+            ver.value = "Ver"
+            vista.value = "Vista"
+            settings.value = "Settings"
+            configuracion.value = "Configuración"
 
         elif codigo == "es-ES":
-            txt_archivo.value = "Archivo"
-            txt_nuevo.value = "Nuevo"
-            txt_salir.value = "Salir"
-            txt_edicion.value = "Edición"
-            txt_copiar.value = "Copiar"
-            txt_pegar.value = "Pegar"
-            txt_ver.value = "Ver"
-            txt_vista.value = "Vista"
-            txt_settings.value = "Ajustes"
-            txt_configuracion.value = "Configuración"
+            archivo.value = "Archivo"
+            nuevo.value = "Nuevo"
+            salir.value = "Salir"
+            edicion.value = "Edición"
+            copiar.value = "Copiar"
+            pegar.value = "Pegar"
+            ver.value = "Ver"
+            vista.value = "Vista"
+            settings.value = "Ajustes"
+            configuracion.value = "Configuración"
 
         elif codigo == "en":
-            txt_archivo.value = "File"
-            txt_nuevo.value = "New"
-            txt_salir.value = "Exit"
-            txt_edicion.value = "Edit"
-            txt_copiar.value = "Copy"
-            txt_pegar.value = "Paste"
-            txt_ver.value = "View"
-            txt_vista.value = "View"
-            txt_settings.value = "Settings"
-            txt_configuracion.value = "Preferences"
+            archivo.value = "File"
+            nuevo.value = "New"
+            salir.value = "Exit"
+            edicion.value = "Edit"
+            copiar.value = "Copy"
+            pegar.value = "Paste"
+            ver.value = "View"
+            vista.value = "View"
+            settings.value = "Settings"
+            configuracion.value = "Preferences"
 
         elif codigo == "en-US":
-            txt_archivo.value = "File"
-            txt_nuevo.value = "New"
-            txt_salir.value = "Quit"
-            txt_edicion.value = "Edit"
-            txt_copiar.value = "Copy"
-            txt_pegar.value = "Paste"
-            txt_ver.value = "View"
-            txt_vista.value = "View"
-            txt_settings.value = "Settings"
-            txt_configuracion.value = "Preferences"
+            archivo.value = "File"
+            nuevo.value = "New"
+            salir.value = "Quit"
+            edicion.value = "Edit"
+            copiar.value = "Copy"
+            pegar.value = "Paste"
+            ver.value = "View"
+            vista.value = "View"
+            settings.value = "Settings"
+            configuracion.value = "Preferences"
 
         page.update()
 
-    def settings(e):
+    def abrir_settings(e):
         usuario = ft.TextField(label="Nombre de usuario")
         tema =  ft.Dropdown(label = "Tema", options=[ft.dropdown.Option("Claro"), ft.dropdown.Option("Oscuro")])
         idioma = ft.Dropdown(label="Idioma",options=[ft.dropdown.Option("es"),ft.dropdown.Option("es-ES"),ft.dropdown.Option("en"),ft.dropdown.Option("en-US")])
         fuente = ft.TextField(label="Tamaño de fuente",keyboard_type=ft.KeyboardType.NUMBER,)
-
+        vista_previa = ft.Image(src=foto_valor if foto_valor else None, visible=bool(foto_valor), width=80,height=80,fit=ft.BoxFit.COVER,border_radius=ft.BorderRadius.all(40),)
         def elegir_color_menu(e):
             def cambiar(e):
                 nonlocal color_menu_valor
                 color_menu_valor = e.data
                 page.update()
-
             picker = BlockPicker(color=color_menu_valor, on_color_change=cambiar)
-            dialogo_color = ft.AlertDialog(
-                title=ft.Text("Color de la barra de menú"),
-                content=picker,
-                actions=[ft.TextButton("Cerrar", on_click=lambda e: page.pop_dialog())],
-                )
+            dialogo_color = ft.AlertDialog(title=ft.Text("Color de la barra de menú"),content=picker,actions=[ft.TextButton("Cerrar", on_click=lambda e: page.pop_dialog())],)
             page.show_dialog(dialogo_color)
 
         def elegir_color_letra(e):
@@ -97,18 +98,22 @@ def main(page: ft.Page):
                 nonlocal color_letra_valor
                 color_letra_valor = e.data
                 page.update()
-
             picker = BlockPicker(color=color_letra_valor, on_color_change=cambiar)
-            dialogo_color = ft.AlertDialog(
-                title=ft.Text("Color de letra"),
-                content=picker,
-                actions=[ft.TextButton("Cerrar", on_click=lambda e: page.pop_dialog())],
-                )
+            dialogo_color = ft.AlertDialog(title=ft.Text("Color de letra"),content=picker,actions=[ft.TextButton("Cerrar", on_click=lambda e: page.pop_dialog())],)
             page.show_dialog(dialogo_color)
 
-        color_menu = ft.Button("Seleccionar color del menú", on_click=elegir_color_menu)
-        color_tema = ft.Button("Seleccionar color de letra", on_click=elegir_color_letra)
-        foto = ft.Button("Seleccionar foto")
+        async def elegir_foto(e):
+            nonlocal foto_valor
+            archivos = await file_picker.pick_files(allow_multiple=False, file_type=ft.FilePickerFileType.IMAGE)
+            if archivos:
+                foto_valor = archivos[0].path
+                vista_previa.src = foto_valor
+                vista_previa.visible = True
+                page.update()
+
+        btn_color_menu =ft.Button("Seleccionar color del menú", on_click=elegir_color_menu)
+        btn_color_letra = ft.Button("Seleccionar color de letra", on_click=elegir_color_letra)
+        foto = ft.Button("Seleccionar foto", on_click=elegir_foto)
 
         def guardar(e):
             print(usuario.value)
@@ -133,45 +138,47 @@ def main(page: ft.Page):
 
             titulo.color = color_letra_valor
             subtitulo.color = color_letra_valor
-            txt_archivo.color = color_letra_valor
-            txt_nuevo.color = color_letra_valor
-            txt_salir.color = color_letra_valor
-            txt_edicion.color = color_letra_valor
-            txt_copiar.color = color_letra_valor
-            txt_pegar.color = color_letra_valor
-            txt_ver.color = color_letra_valor
-            txt_vista.color = color_letra_valor
-            txt_settings.color = color_letra_valor
-            txt_configuracion.color = color_letra_valor
+            archivo.color = color_letra_valor
+            nuevo.color = color_letra_valor
+            salir.color = color_letra_valor
+            edicion.color = color_letra_valor
+            copiar.color = color_letra_valor
+            pegar.color = color_letra_valor
+            ver.color = color_letra_valor
+            vista.color = color_letra_valor
+            settings.color = color_letra_valor
+            configuracion.color = color_letra_valor
+
+            avatar.foreground_image_src = foto_valor
 
             page.pop_dialog()
             page.update()
 
-        settings = ft.AlertDialog(
+        dialogo_settings = ft.AlertDialog(
             title=ft.Text("Configuración de usuario"),
-            content=ft.Column([usuario, tema, idioma, fuente, color_menu, color_tema, foto],),
+            content=ft.Column([usuario, tema, idioma, fuente, btn_color_menu, btn_color_letra, foto, vista_previa],),
 
             actions = [
                 ft.Button("Guardar", on_click=guardar)
                 ])
 
-        page.show_dialog(settings)
+        page.show_dialog(dialogo_settings)
 
     menu = ft.MenuBar(
-        controls=[ft.SubmenuButton(content=txt_archivo,controls=[ft.MenuItemButton(content=txt_nuevo,),
-        ft.MenuItemButton(content=txt_salir,),],),
+        controls=[ft.SubmenuButton(content=archivo,controls=[ft.MenuItemButton(content=nuevo,),
+        ft.MenuItemButton(content=salir,),],),
 
-            ft.SubmenuButton(content=txt_edicion,controls=[ft.MenuItemButton(content=txt_copiar,),ft.MenuItemButton(content=txt_pegar,),],),
+            ft.SubmenuButton(content=edicion,controls=[ft.MenuItemButton(content=copiar,),ft.MenuItemButton(content=pegar,),],),
 
-            ft.SubmenuButton(content=txt_ver,controls=[ft.MenuItemButton(content=txt_vista,),],),
+            ft.SubmenuButton(content=ver,controls=[ft.MenuItemButton(content=vista,),],),
 
-            ft.SubmenuButton(content=txt_settings,controls=[ft.MenuItemButton(content=txt_configuracion,on_click=settings,),],),])
+            ft.SubmenuButton(content=settings,controls=[ft.MenuItemButton(content=configuracion,on_click=abrir_settings,),],)])
 
     titulo = ft.Text("Mi aplicación", size=30)
 
     subtitulo = ft.Text("Gestión de configuración de usuario", size=18)
     page.add(menu,
-             ft.Container(content=ft.Column([titulo, subtitulo], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+             ft.Container(content=ft.Column([avatar, titulo, subtitulo], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
                           alignment=ft.Alignment.CENTER, expand=True, ), )
 
 ft.run(main)
