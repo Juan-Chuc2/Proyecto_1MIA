@@ -1,10 +1,14 @@
 import flet as ft
+from flet_color_pickers import BlockPicker
 
 def main(page: ft.Page):
 
     page.title = "Configuración de Usuario"
     page.window.width = 900
     page.window.height = 600
+
+    color_menu_valor = "#1a1d28"
+    color_letra_valor = "#000000"
 
     txt_archivo = ft.Text("Archivo")
     txt_nuevo = ft.Text("Nuevo")
@@ -73,8 +77,37 @@ def main(page: ft.Page):
         tema =  ft.Dropdown(label = "Tema", options=[ft.dropdown.Option("Claro"), ft.dropdown.Option("Oscuro")])
         idioma = ft.Dropdown(label="Idioma",options=[ft.dropdown.Option("es"),ft.dropdown.Option("es-ES"),ft.dropdown.Option("en"),ft.dropdown.Option("en-US")])
         fuente = ft.TextField(label="Tamaño de fuente",keyboard_type=ft.KeyboardType.NUMBER,)
-        color_menu =ft.Button("Seleccionar color del menú")
-        color_tema = ft.Button("Seleccionar color de letra")
+
+        def elegir_color_menu(e):
+            def cambiar(e):
+                nonlocal color_menu_valor
+                color_menu_valor = e.data
+                page.update()
+
+            picker = BlockPicker(color=color_menu_valor, on_color_change=cambiar)
+            dialogo_color = ft.AlertDialog(
+                title=ft.Text("Color de la barra de menú"),
+                content=picker,
+                actions=[ft.TextButton("Cerrar", on_click=lambda e: page.pop_dialog())],
+                )
+            page.show_dialog(dialogo_color)
+
+        def elegir_color_letra(e):
+            def cambiar(e):
+                nonlocal color_letra_valor
+                color_letra_valor = e.data
+                page.update()
+
+            picker = BlockPicker(color=color_letra_valor, on_color_change=cambiar)
+            dialogo_color = ft.AlertDialog(
+                title=ft.Text("Color de letra"),
+                content=picker,
+                actions=[ft.TextButton("Cerrar", on_click=lambda e: page.pop_dialog())],
+                )
+            page.show_dialog(dialogo_color)
+
+        color_menu = ft.Button("Seleccionar color del menú", on_click=elegir_color_menu)
+        color_tema = ft.Button("Seleccionar color de letra", on_click=elegir_color_letra)
         foto = ft.Button("Seleccionar foto")
 
         def guardar(e):
@@ -95,6 +128,21 @@ def main(page: ft.Page):
 
             if idioma.value:
                 aplicar_idioma(idioma.value)
+
+            menu.style = ft.MenuStyle(bgcolor=color_menu_valor)
+
+            titulo.color = color_letra_valor
+            subtitulo.color = color_letra_valor
+            txt_archivo.color = color_letra_valor
+            txt_nuevo.color = color_letra_valor
+            txt_salir.color = color_letra_valor
+            txt_edicion.color = color_letra_valor
+            txt_copiar.color = color_letra_valor
+            txt_pegar.color = color_letra_valor
+            txt_ver.color = color_letra_valor
+            txt_vista.color = color_letra_valor
+            txt_settings.color = color_letra_valor
+            txt_configuracion.color = color_letra_valor
 
             page.pop_dialog()
             page.update()
