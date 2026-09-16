@@ -1,7 +1,7 @@
 # Proyecto 01
 
 El siguiente código a presentar es un sistema de **Configuración De Usuario** en donde 
-se muestra el como se guardan cambion aplicados en un visualizacion de un aechivo 
+se muestra el como se guardan cambios aplicados en una visualizacion de un archivo 
 
 ## DOCUMENTACION
 
