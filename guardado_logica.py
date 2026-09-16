@@ -20,7 +20,7 @@ Config_por_defecto = {
     "foto_perfil": "",
 }
 
-
+#
 def validar_configuracion(datos):
 
     if not isinstance(datos, dict):

@@ -1,6 +1,6 @@
 import flet as ft
 from flet_color_pickers import BlockPicker
-import guardado_proyecto1 as guardado
+import guardado_logica as guardado
 
 def main(page: ft.Page):
 
