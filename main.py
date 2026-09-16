@@ -1,6 +1,6 @@
 import flet as ft
 from flet_color_pickers import BlockPicker
-import guardado_logica as guardado
+import guardado_proyecto as guardado
 
 def main(page: ft.Page):
 
@@ -8,8 +8,8 @@ def main(page: ft.Page):
     page.window.width = 900
     page.window.height = 600
 
-    color_menu_valor = "#000000"
-    color_letra_valor = "#1a1d28"
+    color_menu_valor = "#1a1d28"
+    color_letra_valor = "#000000"
     foto_valor = ""
     nombre_usuario_valor = "usuario"
     tema_valor = "claro"
@@ -18,6 +18,14 @@ def main(page: ft.Page):
 
     file_picker = ft.FilePicker()
     page.services.append(file_picker)
+
+    aviso = ft.SnackBar(content=ft.Text(""))
+    page.services.append(aviso)
+
+    def mostrar_aviso(mensaje):
+        aviso.content = ft.Text(mensaje)
+        aviso.open = True
+        page.update()
 
     avatar = ft.CircleAvatar(foreground_image_src=foto_valor, radius=35)
 
@@ -32,7 +40,7 @@ def main(page: ft.Page):
     settings = ft.Text("Settings")
     configuracion = ft.Text("Configuración")
 
-    titulo = ft.Text("Mi aplicación", size=30)
+    titulo = ft.Text(nombre_usuario_valor, size=30)
     subtitulo = ft.Text("Gestión de configuración de usuario", size=18)
 
     def aplicar_idioma(codigo):
@@ -47,6 +55,7 @@ def main(page: ft.Page):
             vista.value = "Vista"
             settings.value = "Settings"
             configuracion.value = "Configuración"
+            subtitulo.value = "Gestión de configuración de usuario"
 
         elif codigo == "es-ES":
             archivo.value = "Archivo"
@@ -59,6 +68,7 @@ def main(page: ft.Page):
             vista.value = "Vista"
             settings.value = "Ajustes"
             configuracion.value = "Configuración"
+            subtitulo.value = "Gestión de configuración de usuario"
 
         elif codigo == "en":
             archivo.value = "File"
@@ -71,6 +81,7 @@ def main(page: ft.Page):
             vista.value = "View"
             settings.value = "Settings"
             configuracion.value = "Preferences"
+            subtitulo.value = "User configuration management"
 
         elif codigo == "en-US":
             archivo.value = "File"
@@ -83,6 +94,7 @@ def main(page: ft.Page):
             vista.value = "View"
             settings.value = "Settings"
             configuracion.value = "Preferences"
+            subtitulo.value = "User settings management"
 
     def aplicar_configuracion(config):
         nonlocal color_menu_valor, color_letra_valor, foto_valor
@@ -97,6 +109,8 @@ def main(page: ft.Page):
         foto_valor = config["foto_perfil"]
 
         aplicar_idioma(idioma_valor)
+
+        titulo.value = nombre_usuario_valor
 
         if tema_valor == "oscuro":
             page.theme_mode = ft.ThemeMode.DARK
@@ -177,11 +191,13 @@ def main(page: ft.Page):
                 "color_letra": color_letra_valor,
                 "foto_perfil": foto_valor,
             }
-            guardado.guardar_configuracion(datos)
+
+            exito, mensaje = guardado.guardar_configuracion(datos)
             aplicar_configuracion(datos)
 
             page.pop_dialog()
             page.update()
+            mostrar_aviso(mensaje)
 
         dialogo_settings = ft.AlertDialog(
             title=ft.Text("Configuración de usuario"),
@@ -207,16 +223,57 @@ def main(page: ft.Page):
              ft.Container(content=ft.Column([avatar, titulo, subtitulo], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
                           alignment=ft.Alignment.CENTER, expand=True, ), )
 
-    def cargar_existente(e):
-        datos = guardado.cargar_configuracion()
-        aplicar_configuracion(datos)
+    async def cargar_existente(e):
         page.pop_dialog()
+
+        archivos = await file_picker.pick_files(
+            dialog_title="Seleccioná tu archivo de configuración",
+            file_type=ft.FilePickerFileType.CUSTOM,
+            allowed_extensions=["json"],
+            allow_multiple=False,
+        )
+
+        if not archivos:
+            mostrar_aviso("No se seleccionó ningún archivo, se usan valores por defecto.")
+            datos = guardado.Config_por_defecto.copy()
+            aplicar_configuracion(datos)
+            return
+
+        datos, mensaje, estado = guardado.cargar_configuracion(archivos[0].path)
+
+        if estado in ("corrupto", "formato_invalido", "sin_permisos"):
+            mostrar_error_carga(mensaje, datos)
+        else:
+            aplicar_configuracion(datos)
+            mostrar_aviso(mensaje)
+
+    def mostrar_error_carga(mensaje, datos_por_defecto):
+        def usar_defecto(e):
+            page.pop_dialog()
+            aplicar_configuracion(datos_por_defecto)
+            mostrar_aviso("Se cargaron los valores por defecto.")
+
+        def cancelar(e):
+            page.pop_dialog()
+            page.show_dialog(dialogo_inicio)
+
+        dialogo_error = ft.AlertDialog(
+            modal=True,
+            title=ft.Text("No se pudo cargar el archivo"),
+            content=ft.Text(mensaje),
+            actions=[
+                ft.TextButton("Cancelar", on_click=cancelar),
+                ft.Button("Usar valores por defecto", on_click=usar_defecto),
+            ],
+        )
+        page.show_dialog(dialogo_error)
 
     def generar_nueva(e):
         datos = guardado.Config_por_defecto.copy()
-        guardado.guardar_configuracion(datos)
+        exito, mensaje = guardado.guardar_configuracion(datos)
         aplicar_configuracion(datos)
         page.pop_dialog()
+        mostrar_aviso(mensaje)
 
     dialogo_inicio = ft.AlertDialog(
         modal=True,

@@ -2,7 +2,6 @@ import json
 import os
 import re
 
-
 ARCHIVO_CONFIG = "config.json"
 ARCHIVO_TEMPORAL = "config.tmp"
 ARCHIVO_RESPALDO = "config.bak"
@@ -10,7 +9,6 @@ ARCHIVO_RESPALDO = "config.bak"
 IDIOMAS_VALIDOS = {"es", "es-ES", "en", "en-US"}
 TEMAS_VALIDOS = {"claro", "oscuro"}
 PATRON_COLOR = re.compile(r"^#(?:[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$")
-
 
 Config_por_defecto = {
     "nombre_usuario": "usuario",
@@ -24,13 +22,7 @@ Config_por_defecto = {
 
 
 def validar_configuracion(datos):
-    """
-    Verifica que 'datos' tenga la forma esperada de una configuración
-    válida de esta aplicación (existan los campos y tengan tipos/valores
-    correctos). No solo que sea JSON válido, sino que sea "nuestro" JSON.
 
-    Devuelve (True, "") si es válida, o (False, "detalle del problema").
-    """
     if not isinstance(datos, dict):
         return False, "el contenido no es un objeto de configuración (no es un diccionario JSON)."
 
@@ -66,11 +58,7 @@ def validar_configuracion(datos):
 
 
 def _restaurar_desde_respaldo(ruta_respaldo, motivo):
-    """
-    Se llama cuando el archivo principal no sirve (corrupto o con formato
-    inválido). Intenta usar config.bak; si tampoco sirve, cae a valores
-    por defecto. Siempre devuelve (config, mensaje, estado).
-    """
+
     print(f"Aviso: {motivo} Intentando restaurar desde config.bak")
 
     if not os.path.exists(ruta_respaldo):
@@ -100,11 +88,7 @@ def _restaurar_desde_respaldo(ruta_respaldo, motivo):
 
 
 def cargar_configuracion(ruta=None):
-    """
-    Devuelve siempre una tupla (config, mensaje, estado).
-    estado puede ser: "ok", "no_existe", "restaurado",
-    "corrupto", "formato_invalido" o "sin_permisos".
-    """
+
     ruta_config = ruta if ruta else ARCHIVO_CONFIG
     carpeta = os.path.dirname(ruta_config) or "."
     ruta_respaldo = os.path.join(carpeta, "config.bak")
