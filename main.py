@@ -1,15 +1,20 @@
 import flet as ft
 from flet_color_pickers import BlockPicker
-import  guardado_logica
+import guardado_logica as guardado
+
 def main(page: ft.Page):
 
     page.title = "Configuración de Usuario"
     page.window.width = 900
     page.window.height = 600
 
-    color_menu_valor = "#1a1d28"
-    color_letra_valor = "#000000"
+    color_menu_valor = "#000000"
+    color_letra_valor = "#1a1d28"
     foto_valor = ""
+    nombre_usuario_valor = "usuario"
+    tema_valor = "claro"
+    idioma_valor = "es"
+    fuente_valor = 13
 
     file_picker = ft.FilePicker()
     page.services.append(file_picker)
@@ -26,6 +31,9 @@ def main(page: ft.Page):
     vista = ft.Text("Vista")
     settings = ft.Text("Settings")
     configuracion = ft.Text("Configuración")
+
+    titulo = ft.Text("Mi aplicación", size=30)
+    subtitulo = ft.Text("Gestión de configuración de usuario", size=18)
 
     def aplicar_idioma(codigo):
         if codigo == "es":
@@ -76,13 +84,52 @@ def main(page: ft.Page):
             settings.value = "Settings"
             configuracion.value = "Preferences"
 
+    def aplicar_configuracion(config):
+        nonlocal color_menu_valor, color_letra_valor, foto_valor
+        nonlocal nombre_usuario_valor, tema_valor, idioma_valor, fuente_valor
+
+        nombre_usuario_valor = config["nombre_usuario"]
+        tema_valor = config["tema_interfaz"]
+        idioma_valor = config["idioma"]
+        fuente_valor = config["tamaño_fuente"]
+        color_menu_valor = config["color_barra"]
+        color_letra_valor = config["color_letra"]
+        foto_valor = config["foto_perfil"]
+
+        aplicar_idioma(idioma_valor)
+
+        if tema_valor == "oscuro":
+            page.theme_mode = ft.ThemeMode.DARK
+        else:
+            page.theme_mode = ft.ThemeMode.LIGHT
+
+        titulo.size = fuente_valor
+        subtitulo.size = fuente_valor
+
+        menu.style = ft.MenuStyle(bgcolor=color_menu_valor)
+
+        titulo.color = color_letra_valor
+        subtitulo.color = color_letra_valor
+        archivo.color = color_letra_valor
+        nuevo.color = color_letra_valor
+        salir.color = color_letra_valor
+        edicion.color = color_letra_valor
+        copiar.color = color_letra_valor
+        pegar.color = color_letra_valor
+        ver.color = color_letra_valor
+        vista.color = color_letra_valor
+        settings.color = color_letra_valor
+        configuracion.color = color_letra_valor
+
+        avatar.foreground_image_src = foto_valor
+
         page.update()
 
     def abrir_settings(e):
-        usuario = ft.TextField(label="Nombre de usuario")
-        tema =  ft.Dropdown(label = "Tema", options=[ft.dropdown.Option("Claro"), ft.dropdown.Option("Oscuro")])
-        idioma = ft.Dropdown(label="Idioma",options=[ft.dropdown.Option("es"),ft.dropdown.Option("es-ES"),ft.dropdown.Option("en"),ft.dropdown.Option("en-US")])
-        fuente = ft.TextField(label="Tamaño de fuente",keyboard_type=ft.KeyboardType.NUMBER,)
+        usuario = ft.TextField(label="Nombre de usuario", value=nombre_usuario_valor)
+        tema =  ft.Dropdown(label = "Tema", value=tema_valor.capitalize(), options=[ft.dropdown.Option("Claro"), ft.dropdown.Option("Oscuro")])
+        idioma = ft.Dropdown(label="Idioma", value=idioma_valor, options=[ft.dropdown.Option("es"),ft.dropdown.Option("es-ES"),ft.dropdown.Option("en"),ft.dropdown.Option("en-US")])
+        fuente = ft.TextField(label="Tamaño de fuente",keyboard_type=ft.KeyboardType.NUMBER, value=str(fuente_valor),)
         vista_previa = ft.Image(src=foto_valor if foto_valor else None, visible=bool(foto_valor), width=80,height=80,fit=ft.BoxFit.COVER,border_radius=ft.BorderRadius.all(40),)
         def elegir_color_menu(e):
             def cambiar(e):
@@ -123,50 +170,15 @@ def main(page: ft.Page):
 
             datos = {
                 "nombre_usuario": usuario.value,
-                "tema_interfaz": tema.value,
+                "tema_interfaz": tema.value.lower(),
                 "idioma": idioma.value,
                 "tamaño_fuente": int(fuente.value) if fuente.value else 13,
                 "color_barra": color_menu_valor,
                 "color_letra": color_letra_valor,
                 "foto_perfil": foto_valor,
             }
-            guardado_logica.guardar_configuracion(datos)
-
-            if tema.value == "Oscuro":
-                page.theme_mode = ft.ThemeMode.DARK
-            else:
-                page.theme_mode = ft.ThemeMode.LIGHT
-
-            if tema.value == "Oscuro":
-                page.theme_mode = ft.ThemeMode.DARK
-            else:
-                page.theme_mode = ft.ThemeMode.LIGHT
-
-            if fuente.value:
-                tamano = int(fuente.value)
-
-                titulo.size = tamano
-                subtitulo.size = tamano
-
-            if idioma.value:
-                aplicar_idioma(idioma.value)
-
-            menu.style = ft.MenuStyle(bgcolor=color_menu_valor)
-
-            titulo.color = color_letra_valor
-            subtitulo.color = color_letra_valor
-            archivo.color = color_letra_valor
-            nuevo.color = color_letra_valor
-            salir.color = color_letra_valor
-            edicion.color = color_letra_valor
-            copiar.color = color_letra_valor
-            pegar.color = color_letra_valor
-            ver.color = color_letra_valor
-            vista.color = color_letra_valor
-            settings.color = color_letra_valor
-            configuracion.color = color_letra_valor
-
-            avatar.foreground_image_src = foto_valor
+            guardado.guardar_configuracion(datos)
+            aplicar_configuracion(datos)
 
             page.pop_dialog()
             page.update()
@@ -191,11 +203,30 @@ def main(page: ft.Page):
 
             ft.SubmenuButton(content=settings,controls=[ft.MenuItemButton(content=configuracion,on_click=abrir_settings,),],)])
 
-    titulo = ft.Text("Mi aplicación", size=30)
-
-    subtitulo = ft.Text("Gestión de configuración de usuario", size=18)
     page.add(menu,
              ft.Container(content=ft.Column([avatar, titulo, subtitulo], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
                           alignment=ft.Alignment.CENTER, expand=True, ), )
+
+    def cargar_existente(e):
+        datos = guardado.cargar_configuracion()
+        aplicar_configuracion(datos)
+        page.pop_dialog()
+
+    def generar_nueva(e):
+        datos = guardado.Config_por_defecto.copy()
+        guardado.guardar_configuracion(datos)
+        aplicar_configuracion(datos)
+        page.pop_dialog()
+
+    dialogo_inicio = ft.AlertDialog(
+        modal=True,
+        title=ft.Text("Bienvenido"),
+        content=ft.Text("¿Querés cargar tu configuración guardada o generar una nueva?"),
+        actions=[
+            ft.TextButton("Cargar configuración guardada", on_click=cargar_existente),
+            ft.Button("Generar nueva configuración", on_click=generar_nueva),
+            ])
+
+    page.show_dialog(dialogo_inicio)
 
 ft.run(main)
