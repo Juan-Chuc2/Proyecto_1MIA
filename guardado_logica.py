@@ -15,7 +15,7 @@ Config_por_defecto = {
     "tema_interfaz": "claro",
     "idioma": "es",
     "tamaño_fuente": 13,
-    "color_barra": "#1a1d28",
+    "color_barra": "#ffffff",
     "color_letra": "#000000",
     "foto_perfil": "",
 }
@@ -57,14 +57,23 @@ def validar_configuracion(datos):
     return True, ""
 
 
-def _restaurar_desde_respaldo(ruta_respaldo, motivo):
+def es_archivo_editable(ruta):
 
+    if os.path.exists(ruta):
+        return os.access(ruta, os.W_OK)
+    carpeta = os.path.dirname(ruta) or "."
+    return os.access(carpeta, os.W_OK)
+
+
+def _restaurar_desde_respaldo(ruta_respaldo, ruta_original, motivo):
+
+    editable = es_archivo_editable(ruta_original)
     print(f"Aviso: {motivo} Intentando restaurar desde config.bak")
 
     if not os.path.exists(ruta_respaldo):
         mensaje = f"{motivo} No existe config.bak para restaurar. Se usan valores por defecto."
         print(mensaje)
-        return Config_por_defecto.copy(), mensaje, "formato_invalido"
+        return Config_por_defecto.copy(), mensaje, "formato_invalido", editable
 
     try:
         with open(ruta_respaldo, "r", encoding="utf-8") as respaldo:
@@ -72,19 +81,19 @@ def _restaurar_desde_respaldo(ruta_respaldo, motivo):
     except json.JSONDecodeError:
         mensaje = f"{motivo} El respaldo config.bak también está corrupto. Se usan valores por defecto."
         print(mensaje)
-        return Config_por_defecto.copy(), mensaje, "corrupto"
+        return Config_por_defecto.copy(), mensaje, "corrupto", editable
 
     es_valido, detalle = validar_configuracion(datos_respaldo)
     if not es_valido:
         mensaje = f"{motivo} El respaldo config.bak tampoco es válido ({detalle}). Se usan valores por defecto."
         print(mensaje)
-        return Config_por_defecto.copy(), mensaje, "formato_invalido"
+        return Config_por_defecto.copy(), mensaje, "formato_invalido", editable
 
     config = Config_por_defecto.copy()
     config.update(datos_respaldo)
     mensaje = f"{motivo} Se restauró la configuración desde config.bak."
     print(mensaje)
-    return config, mensaje, "restaurado"
+    return config, mensaje, "restaurado", editable
 
 
 def cargar_configuracion(ruta=None):
@@ -96,7 +105,9 @@ def cargar_configuracion(ruta=None):
     if not os.path.exists(ruta_config):
         mensaje = "Aviso: el archivo no existe, se usan valores por defecto."
         print(mensaje)
-        return Config_por_defecto.copy(), mensaje, "no_existe"
+        return Config_por_defecto.copy(), mensaje, "no_existe", True
+
+    editable = es_archivo_editable(ruta_config)
 
     try:
         with open(ruta_config, "r", encoding="utf-8") as archivo:
@@ -105,25 +116,32 @@ def cargar_configuracion(ruta=None):
     except json.JSONDecodeError:
         return _restaurar_desde_respaldo(
             ruta_respaldo,
+            ruta_config,
             "El archivo seleccionado tiene un JSON mal formado (sintaxis inválida)."
         )
 
     except PermissionError:
         mensaje = "Aviso: sin permisos de lectura sobre el archivo, se usan valores por defecto."
         print(mensaje)
-        return Config_por_defecto.copy(), mensaje, "sin_permisos"
+        return Config_por_defecto.copy(), mensaje, "sin_permisos", False
 
     es_valido, detalle = validar_configuracion(datos)
     if not es_valido:
         return _restaurar_desde_respaldo(
             ruta_respaldo,
+            ruta_config,
             f"El archivo seleccionado no es una configuración válida de esta aplicación: {detalle}"
         )
 
     config = Config_por_defecto.copy()
     config.update(datos)
-    mensaje = "Configuración cargada correctamente."
-    return config, mensaje, "ok"
+
+    if editable:
+        mensaje = "Configuración cargada correctamente."
+    else:
+        mensaje = "Configuración cargada correctamente *el archivo es de solo lectura: no se podrá editar*."
+
+    return config, mensaje, "ok", editable
 
 
 def guardar_configuracion(datos):

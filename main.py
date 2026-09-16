@@ -1,6 +1,6 @@
 import flet as ft
 from flet_color_pickers import BlockPicker
-import guardado_proyecto as guardado
+import guardado_proyecto1 as guardado
 
 def main(page: ft.Page):
 
@@ -8,13 +8,14 @@ def main(page: ft.Page):
     page.window.width = 900
     page.window.height = 600
 
-    color_menu_valor = "#1a1d28"
+    color_menu_valor = "#ffffff"
     color_letra_valor = "#000000"
     foto_valor = ""
     nombre_usuario_valor = "usuario"
     tema_valor = "claro"
     idioma_valor = "es"
     fuente_valor = 13
+    solo_lectura_valor = False
 
     file_picker = ft.FilePicker()
     page.services.append(file_picker)
@@ -140,11 +141,18 @@ def main(page: ft.Page):
         page.update()
 
     def abrir_settings(e):
-        usuario = ft.TextField(label="Nombre de usuario", value=nombre_usuario_valor)
-        tema =  ft.Dropdown(label = "Tema", value=tema_valor.capitalize(), options=[ft.dropdown.Option("Claro"), ft.dropdown.Option("Oscuro")])
-        idioma = ft.Dropdown(label="Idioma", value=idioma_valor, options=[ft.dropdown.Option("es"),ft.dropdown.Option("es-ES"),ft.dropdown.Option("en"),ft.dropdown.Option("en-US")])
-        fuente = ft.TextField(label="Tamaño de fuente",keyboard_type=ft.KeyboardType.NUMBER, value=str(fuente_valor),)
+        usuario = ft.TextField(label="Nombre de usuario", value=nombre_usuario_valor, disabled=solo_lectura_valor)
+        tema =  ft.Dropdown(label = "Tema", value=tema_valor.capitalize(), options=[ft.dropdown.Option("Claro"), ft.dropdown.Option("Oscuro")], disabled=solo_lectura_valor)
+        idioma = ft.Dropdown(label="Idioma", value=idioma_valor, options=[ft.dropdown.Option("es"),ft.dropdown.Option("es-ES"),ft.dropdown.Option("en"),ft.dropdown.Option("en-US")], disabled=solo_lectura_valor)
+        fuente = ft.TextField(label="Tamaño de fuente",keyboard_type=ft.KeyboardType.NUMBER, value=str(fuente_valor), disabled=solo_lectura_valor)
         vista_previa = ft.Image(src=foto_valor if foto_valor else None, visible=bool(foto_valor), width=80,height=80,fit=ft.BoxFit.COVER,border_radius=ft.BorderRadius.all(40),)
+
+        aviso_solo_lectura = ft.Text(
+            "Este archivo se cargó en modo solo lectura: solo se puede ver los valores, pero no editarlos ni guardarlos.",
+            color=ft.Colors.RED,
+            visible=solo_lectura_valor,
+        )
+
         def elegir_color_menu(e):
             def cambiar(e):
                 nonlocal color_menu_valor
@@ -172,11 +180,15 @@ def main(page: ft.Page):
                 vista_previa.visible = True
                 page.update()
 
-        btn_color_menu =ft.Button("Seleccionar color del menú", on_click=elegir_color_menu)
-        btn_color_letra = ft.Button("Seleccionar color de letra", on_click=elegir_color_letra)
-        foto = ft.Button("Seleccionar foto", on_click=elegir_foto)
+        btn_color_menu =ft.Button("Seleccionar color del menú", on_click=elegir_color_menu, disabled=solo_lectura_valor)
+        btn_color_letra = ft.Button("Seleccionar color de letra", on_click=elegir_color_letra, disabled=solo_lectura_valor)
+        foto = ft.Button("Seleccionar foto", on_click=elegir_foto, disabled=solo_lectura_valor)
 
         def guardar(e):
+            if solo_lectura_valor:
+                mostrar_aviso("No se puede guardar: el archivo cargado es de solo lectura.")
+                return
+
             print(usuario.value)
             print(tema.value)
             print(idioma.value)
@@ -201,10 +213,11 @@ def main(page: ft.Page):
 
         dialogo_settings = ft.AlertDialog(
             title=ft.Text("Configuración de usuario"),
-            content=ft.Column([usuario, tema, idioma, fuente, btn_color_menu, btn_color_letra, foto, vista_previa],),
+            content=ft.Column([aviso_solo_lectura, usuario, tema, idioma, fuente, btn_color_menu, btn_color_letra, foto, vista_previa],),
 
             actions = [
-                ft.Button("Guardar", on_click=guardar)
+                ft.TextButton("Cerrar", on_click=lambda e: page.pop_dialog()),
+                ft.Button("Guardar", on_click=guardar, disabled=solo_lectura_valor),
                 ])
 
         page.show_dialog(dialogo_settings)
@@ -224,6 +237,7 @@ def main(page: ft.Page):
                           alignment=ft.Alignment.CENTER, expand=True, ), )
 
     async def cargar_existente(e):
+        nonlocal solo_lectura_valor
         page.pop_dialog()
 
         archivos = await file_picker.pick_files(
@@ -234,21 +248,26 @@ def main(page: ft.Page):
         )
 
         if not archivos:
+            solo_lectura_valor = False
             mostrar_aviso("No se seleccionó ningún archivo, se usan valores por defecto.")
             datos = guardado.Config_por_defecto.copy()
             aplicar_configuracion(datos)
             return
 
-        datos, mensaje, estado = guardado.cargar_configuracion(archivos[0].path)
+        datos, mensaje, estado, editable = guardado.cargar_configuracion(archivos[0].path)
 
         if estado in ("corrupto", "formato_invalido", "sin_permisos"):
+            solo_lectura_valor = False
             mostrar_error_carga(mensaje, datos)
         else:
+            solo_lectura_valor = not editable
             aplicar_configuracion(datos)
             mostrar_aviso(mensaje)
 
     def mostrar_error_carga(mensaje, datos_por_defecto):
         def usar_defecto(e):
+            nonlocal solo_lectura_valor
+            solo_lectura_valor = False
             page.pop_dialog()
             aplicar_configuracion(datos_por_defecto)
             mostrar_aviso("Se cargaron los valores por defecto.")
@@ -269,6 +288,8 @@ def main(page: ft.Page):
         page.show_dialog(dialogo_error)
 
     def generar_nueva(e):
+        nonlocal solo_lectura_valor
+        solo_lectura_valor = False
         datos = guardado.Config_por_defecto.copy()
         exito, mensaje = guardado.guardar_configuracion(datos)
         aplicar_configuracion(datos)
